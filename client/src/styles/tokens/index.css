@@ -1,0 +1,11 @@
+/**
+ * @tokens Design Tokens
+ * @description A collection of all design tokens used in the application
+ */
+
+@import './colors.css';
+@import './typography.css';
+@import './spacing.css';
+@import './shadows.css';
+
+/* You can add additional token files and import them here */

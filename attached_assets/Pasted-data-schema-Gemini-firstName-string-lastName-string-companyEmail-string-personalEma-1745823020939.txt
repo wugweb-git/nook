@@ -1,0 +1,65 @@
+data schema
+
+Gemini
+{
+  firstName: string;
+  lastName: string;
+  companyEmail: string;
+  personalEmailAddress: string;
+  primaryPhoneNumber: string;
+  secondaryPhoneNumber?: string;
+  title: string;
+  location: string;
+  linkedinUrl?: string;
+  githubUrl?: string;
+  portfolioUrl?: string;
+  behanceUrl?: string;
+  dribbbleUrl?: string;
+  codepenUrl?: string;
+  adobeUrl?: string;
+  profilePicture?: File | null;
+  documents: {
+    passportPhoto?: File | null;
+    aadhaarCardFront?: File | null;
+    aadhaarCardBack?: File | null;
+    panCardFront?: File | null;
+    panCardBack?: File | null;
+    passportFront?: File | null;
+    passportBack?: File | null;
+    resume?: File | null;
+    tenthAndTwelfthMarks?: File | null;
+    graduationCertificate?: File | null;
+    pgCertificate?: File | null;
+    appraisalLetter?: File | null;
+    appointmentLetter?: File | null;
+    relievingLetter?: File | null;
+    cancelledCheque?: File | null;
+    lastThreePayslips?: File | null;
+  };
+}
+
+Explanation:
+
+firstName, lastName, companyEmail, personalEmailAddress, primaryPhoneNumber, title, location: Basic required information about the user.
+
+secondaryPhoneNumber: Optional secondary phone number.
+
+linkedinUrl, githubUrl, portfolioUrl, behanceUrl, dribbbleUrl, codepenUrl, adobeUrl: Optional URLs to the user's online profiles.
+
+profilePicture: Optional profile picture file.
+
+documents: An object containing various document files, categorized as follows:
+
+passportPhoto: Passport size photograph.
+aadhaarCardFront, aadhaarCardBack: Front and back of Aadhaar card.
+panCardFront, panCardBack: Front and back of PAN card.
+passportFront, passportBack: Front and back of Passport.
+resume: Latest resume file.
+tenthAndTwelfthMarks: 10th & 12th Passing Certificates/ Mark sheets.
+graduationCertificate: Graduation Certificate/ Mark Sheets.
+pgCertificate: PG certificate / Mark sheet copies – If Any (optional).
+appraisalLetter: Appraisal/Promotion/increment letter – If Any (optional).
+appointmentLetter: Appointment letter of the previous company – If Any (optional).
+relievingLetter: Relieving letter of the previous company – If Any (optional).
+cancelledCheque: Cancelled Cheque / Bank Account Detail / ITR.
+lastThreePayslips: Last 3 Months Payslips – If Any (optional).
