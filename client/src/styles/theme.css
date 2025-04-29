@@ -1,0 +1,174 @@
+/**
+ * Theme.css - Modern theme variables for the Wugweb Team platform
+ * 
+ * This file defines CSS variables for light and dark modes, including semantic color mappings.
+ */
+
+/* Light theme (default) */
+:root {
+  /* Primary brand colors */
+  --color-yellow-50: 50 100% 97%;
+  --color-yellow-100: 50 100% 94%;
+  --color-yellow-200: 50 92% 90%;
+  --color-yellow-300: 50 86% 80%;
+  --color-yellow-400: 50 94% 65%;
+  --color-yellow-500: 50 100% 50%;
+  --color-yellow-600: 50 100% 45%;
+  --color-yellow-700: 50 100% 40%;
+  --color-yellow-800: 50 100% 35%;
+  --color-yellow-900: 50 100% 30%;
+  
+  /* Neutral colors */
+  --color-neutral-50: 0 0% 98%;
+  --color-neutral-100: 0 0% 95%;
+  --color-neutral-200: 0 0% 90%;
+  --color-neutral-300: 0 0% 85%;
+  --color-neutral-400: 0 0% 70%;
+  --color-neutral-500: 0 0% 50%;
+  --color-neutral-600: 0 0% 35%;
+  --color-neutral-700: 0 0% 25%;
+  --color-neutral-800: 0 0% 15%;
+  --color-neutral-900: 0 0% 10%;
+  --color-neutral-950: 0 0% 5%;
+  
+  /* Semantic colors for light theme */
+  --color-background: var(--color-neutral-50);
+  --color-foreground: var(--color-neutral-950);
+  --color-muted: var(--color-neutral-600);
+  --color-muted-foreground: var(--color-neutral-700);
+  --color-card: 0 0% 100%;
+  --color-card-foreground: var(--color-neutral-950);
+  --color-border: var(--color-neutral-300);
+  --color-input: var(--color-neutral-300);
+  --color-primary: var(--color-yellow-500);
+  --color-primary-foreground: 0 0% 0%;
+  --color-secondary: var(--color-neutral-900);
+  --color-secondary-foreground: 0 0% 100%;
+  --color-accent: var(--color-yellow-100);
+  --color-accent-foreground: var(--color-yellow-900);
+  
+  /* Status colors */
+  --color-success: 142 71% 45%;
+  --color-success-foreground: 0 0% 100%;
+  --color-warning: 38 92% 50%;
+  --color-warning-foreground: 0 0% 0%;
+  --color-error: 0 84% 60%;
+  --color-error-foreground: 0 0% 100%;
+  
+  /* Interaction colors */
+  --color-ring: var(--color-yellow-500);
+  --color-focus-ring: var(--color-yellow-500);
+  --color-focus-ring-opacity: 0.3;
+  
+  /* System UI variables */
+  --radius-sm: 0.125rem;
+  --radius-md: 0.25rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+  --radius-2xl: 1rem;
+  --radius-full: 9999px;
+  
+  /* Font weights */
+  --weight-light: 300;
+  --weight-normal: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+  
+  /* Shadow tokens */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -1px rgba(0, 0, 0, 0.04);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.02);
+}
+
+/* Dark theme */
+.dark {
+  /* Semantic colors for dark theme */
+  --color-background: var(--color-neutral-950);
+  --color-foreground: var(--color-neutral-50);
+  --color-muted: var(--color-neutral-400);
+  --color-muted-foreground: var(--color-neutral-300);
+  --color-card: var(--color-neutral-900);
+  --color-card-foreground: var(--color-neutral-50);
+  --color-border: var(--color-neutral-800);
+  --color-input: var(--color-neutral-800);
+  --color-primary: var(--color-yellow-500);
+  --color-primary-foreground: 0 0% 0%;
+  --color-secondary: var(--color-neutral-200);
+  --color-secondary-foreground: 0 0% 0%;
+  --color-accent: var(--color-yellow-900);
+  --color-accent-foreground: var(--color-yellow-100);
+  
+  /* Status colors */
+  --color-success: 142 65% 40%;
+  --color-success-foreground: 0 0% 100%;
+  --color-warning: 38 92% 45%;
+  --color-warning-foreground: 0 0% 100%;
+  --color-error: 0 80% 55%;
+  --color-error-foreground: 0 0% 100%;
+  
+  /* Shadow tokens (darker for dark mode) */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.18);
+}
+
+/* Mapping design tokens to Tailwind CSS variables */
+:root {
+  --background: var(--color-background);
+  --foreground: var(--color-foreground);
+  --muted: var(--color-neutral-100);
+  --muted-foreground: var(--color-muted);
+  --popover: 0 0% 100%;
+  --popover-foreground: var(--color-foreground);
+  --card: var(--color-card);
+  --card-foreground: var(--color-card-foreground);
+  --border: var(--color-border);
+  --input: var(--color-input);
+  --primary: var(--color-primary);
+  --primary-foreground: var(--color-primary-foreground);
+  --secondary: var(--color-secondary);
+  --secondary-foreground: var(--color-secondary-foreground);
+  --accent: var(--color-accent);
+  --accent-foreground: var(--color-accent-foreground);
+  --destructive: var(--color-error);
+  --destructive-foreground: var(--color-error-foreground);
+  --ring: var(--color-ring);
+  --radius: var(--radius-lg);
+  
+  /* Specific brand variables for easier access */
+  --yellow-50: var(--color-yellow-50);
+  --yellow-100: var(--color-yellow-100);
+  --yellow-200: var(--color-yellow-200);
+  --yellow-300: var(--color-yellow-300);
+  --yellow-400: var(--color-yellow-400);
+  --yellow-500: var(--color-yellow-500);
+  --yellow-600: var(--color-yellow-600);
+  --yellow-700: var(--color-yellow-700);
+  --yellow-800: var(--color-yellow-800);
+  --yellow-900: var(--color-yellow-900);
+  
+  /* Animation durations */
+  --duration-fast: 150ms;
+  --duration-normal: 250ms;
+  --duration-slow: 350ms;
+  --duration-slower: 500ms;
+  
+  /* Animation timing functions */
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Dark mode mapping for Tailwind */
+.dark {
+  --background: var(--color-background);
+  --foreground: var(--color-foreground);
+  --muted: var(--color-neutral-800);
+  --muted-foreground: var(--color-muted);
+  --popover: var(--color-neutral-900);
+  --popover-foreground: var(--color-foreground);
+}
