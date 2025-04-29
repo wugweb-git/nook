@@ -45,11 +45,10 @@ process.on('unhandledRejection', (reason, promise) => {
   const server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+    console.error('Error:', err);
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
-
     res.status(status).json({ message });
-    throw err;
   });
 
   // importantly only setup vite in development and after
@@ -66,7 +65,7 @@ process.on('unhandledRejection', (reason, promise) => {
   // It is the only port that is not firewalled.
   const port = 5000;
   server.listen({
-    port,
+    port: 5000,
     host: "0.0.0.0",
     reusePort: true,
   }, () => {

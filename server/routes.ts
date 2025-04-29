@@ -33,7 +33,7 @@ const storage_config = multer.diskStorage({
   },
 });
 
-const sharp = require('sharp');
+import sharp from 'sharp';
 const upload = multer({ storage: storage_config });
 
 // Function to mask Aadhaar card image
@@ -98,10 +98,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   apiRouter.post("/auth/login", async (req, res) => {
     try {
       const credentials = loginSchema.parse(req.body);
-      const user = await storage.getUserByUsername(credentials.username);
+      const user = await storage.getUserByEmail(credentials.email);
       
       if (!user || user.password !== credentials.password) {
-        return res.status(401).json({ message: "Invalid username or password" });
+        return res.status(401).json({ message: "Invalid email or password" });
       }
       
       // Update last login time
@@ -137,6 +137,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
     req.session.destroy(() => {
       res.status(200).json({ message: "Logout successful" });
     });
+  });
+
+  apiRouter.post("/auth/register", async (req, res) => {
+    try {
+      const userData = insertUserSchema.parse(req.body);
+      
+      // Check if user already exists
+      const existingUser = await storage.getUserByUsername(userData.username);
+      if (existingUser) {
+        return res.status(400).json({ message: "Username already exists" });
+      }
+      
+      // Check if email already exists
+      const users = await Promise.all((await storage.getUsers()).map(user => storage.getUser(user.id)));
+      const emailExists = users.some(user => user && user.email === userData.email);
+      if (emailExists) {
+        return res.status(400).json({ message: "Email already exists" });
+      }
+      
+      // Create new user
+      const newUser = await storage.createUser(userData);
+      
+      // Set user in session to auto login after register
+      req.session.userId = newUser.id;
+      
+      // Save session explicitly
+      req.session.save(err => {
+        if (err) {
+          console.error("Session save error:", err);
+          return res.status(500).json({ message: "Failed to save session" });
+        }
+        
+        // Return user without password
+        const { password, ...userWithoutPassword } = newUser;
+        return res.status(201).json({
+          user: userWithoutPassword,
+          message: "Registration successful"
+        });
+      });
+    } catch (error) {
+      if (error instanceof ZodError) {
+        const validationError = fromZodError(error);
+        return res.status(400).json({ message: validationError.message });
+      }
+      return res.status(500).json({ message: "Internal server error" });
+    }
   });
   
   apiRouter.get("/auth/session", async (req, res) => {
@@ -366,18 +412,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
   apiRouter.get("/onboarding", isAuthenticated, async (req, res) => {
     try {
       const userId = req.session.userId!;
+      console.log("Getting onboarding data for userId:", userId);
+      
       const records = await storage.getEmployeeOnboardingByUserId(userId);
+      console.log("Retrieved onboarding records:", JSON.stringify(records));
       
       const completedSteps = records.filter(r => r.status === "completed").length;
       const totalSteps = records.length;
       const progressPercentage = totalSteps > 0 ? Math.round((completedSteps / totalSteps) * 100) : 0;
+      
+      console.log(`Onboarding progress: ${completedSteps}/${totalSteps} (${progressPercentage}%)`);
       
       return res.status(200).json({
         steps: records,
         progress: progressPercentage
       });
     } catch (error) {
-      return res.status(500).json({ message: "Internal server error" });
+      console.error("Error in onboarding API:", error);
+      return res.status(500).json({ message: "Internal server error", error: String(error) });
     }
   });
   

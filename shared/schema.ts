@@ -190,7 +190,7 @@ export type InsertReportDashboard = z.infer<typeof insertReportDashboardSchema>;
 
 // Login schema
 export const loginSchema = z.object({
-  username: z.string().min(1, "Username is required"),
+  email: z.string().email("Please enter a valid email"),
   password: z.string().min(1, "Password is required"),
 });
 
