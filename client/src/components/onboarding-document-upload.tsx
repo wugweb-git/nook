@@ -290,30 +290,48 @@ export default function OnboardingDocumentUpload() {
     return (
       <div 
         key={document.id} 
-        className={`border rounded-md p-4 ${isUploaded ? 'border-green-500 bg-green-50' : ''}`}
+        className={`border-2 rounded-lg p-5 shadow-sm transition-all ${
+          isUploaded 
+            ? 'border-black bg-gray-50' 
+            : document.required 
+              ? 'border-yellow-500 hover:border-yellow-600' 
+              : 'border-gray-200 hover:border-gray-300'
+        }`}
       >
-        <div className="flex justify-between items-start mb-2">
+        <div className="flex justify-between items-start mb-3">
           <div>
-            <h3 className="font-medium flex items-center">
+            <h3 className="text-lg font-medium flex items-center text-gray-900">
               {document.name}
-              {document.required && <span className="text-red-500 ml-1">*</span>}
-              {isUploaded && <CheckCircleIcon className="h-4 w-4 text-green-500 ml-2" />}
+              {document.required && <span className="text-yellow-500 ml-1 font-bold">*</span>}
+              {isUploaded && <CheckCircleIcon className="h-5 w-5 text-black ml-2" />}
             </h3>
             {document.description && (
-              <p className="text-sm text-gray-500">{document.description}</p>
+              <p className="text-sm text-gray-600 mt-1">{document.description}</p>
             )}
+            <div className="mt-1 flex items-center">
+              <span className="text-xs font-medium text-gray-500 flex items-center">
+                Accepted formats: {formatAcceptedTypes(document.acceptedTypes)}
+              </span>
+            </div>
           </div>
         </div>
         
-        <div className="mt-3">
+        <div className="mt-4">
           {!isUploaded ? (
             <div 
-              className="border-2 border-dashed rounded-md p-4 mt-1 text-center cursor-pointer hover:bg-gray-50 transition-colors"
+              className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors ${
+                document.required 
+                  ? 'border-yellow-300 hover:bg-yellow-50' 
+                  : 'border-gray-300 hover:bg-gray-50'
+              }`}
               onClick={() => fileInputRefs.current[document.id]?.click()}
             >
-              <UploadIcon className="h-6 w-6 mx-auto text-gray-400" />
-              <p className="mt-2 text-sm text-gray-500">
+              <UploadIcon className="h-10 w-10 mx-auto text-gray-400 mb-3" />
+              <p className="text-gray-600 font-medium">
                 Click to select a file or drag and drop
+              </p>
+              <p className="mt-1 text-sm text-gray-500">
+                Maximum file size: {getFileSizeLimit()}MB
               </p>
               <Input
                 ref={(ref) => setFileInputRef(document.id, ref)}
@@ -325,17 +343,23 @@ export default function OnboardingDocumentUpload() {
               />
             </div>
           ) : (
-            <div className="flex items-center justify-between">
-              <div className="flex items-center text-green-600">
-                <FileIcon className="h-5 w-5 mr-2" />
-                <span className="text-sm truncate max-w-xs">{docStatus.filename}</span>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between bg-gray-100 p-4 rounded-lg">
+              <div className="flex items-center text-black mb-3 sm:mb-0">
+                <div className="w-10 h-10 rounded-full bg-black text-white flex items-center justify-center mr-3">
+                  <FileTextIcon className="h-5 w-5" />
+                </div>
+                <div>
+                  <span className="text-sm font-medium block">{docStatus.filename}</span>
+                  <span className="text-xs text-gray-500">Uploaded successfully</span>
+                </div>
               </div>
               <Button 
                 variant="outline" 
                 size="sm"
+                className="border-gray-300 hover:border-black hover:bg-white text-gray-700 hover:text-black"
                 onClick={() => handleReplaceDocument(document.id)}
               >
-                Replace
+                Replace File
               </Button>
             </div>
           )}
@@ -393,12 +417,13 @@ export default function OnboardingDocumentUpload() {
   };
   
   return (
-    <Card>
+    <Card className="border-black overflow-hidden">
+      <div className="h-1 w-full bg-yellow-500"></div>
       <CardHeader>
         <div className="flex flex-col md:flex-row md:items-center md:justify-between">
           <div>
-            <CardTitle>Required Documents</CardTitle>
-            <CardDescription>
+            <CardTitle className="text-2xl font-semibold">Required Documents</CardTitle>
+            <CardDescription className="text-gray-600 mt-1">
               Please upload all the required documents for onboarding
             </CardDescription>
           </div>
@@ -407,11 +432,11 @@ export default function OnboardingDocumentUpload() {
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button variant="outline" size="sm" className="mr-2">
-                    <HelpCircleIcon className="h-4 w-4" />
+                  <Button variant="outline" size="sm" className="mr-2 rounded-full border-gray-300 hover:border-black hover:bg-gray-100">
+                    <HelpCircleIcon className="h-5 w-5" />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent>
+                <TooltipContent className="bg-black text-white border-0 p-3 rounded-md">
                   <p className="max-w-xs">
                     Upload all required documents (*) to complete your onboarding. 
                     File size limit: {getFileSizeLimit()}MB per file.
@@ -427,61 +452,66 @@ export default function OnboardingDocumentUpload() {
             <div className="flex items-center">
               <span className="text-sm font-medium mr-2">Overall Completion</span>
               {uploadProgress === 100 ? (
-                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-black text-white">
                   <CheckCircleIcon className="h-3 w-3 mr-1" />
                   Complete
                 </span>
               ) : (
-                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
+                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-yellow-500 text-white">
                   <InfoIcon className="h-3 w-3 mr-1" />
                   In Progress
                 </span>
               )}
             </div>
-            <span className="text-sm font-medium">{uploadProgress}%</span>
+            <span className="text-sm font-bold text-gray-800">{uploadProgress}%</span>
           </div>
           <Progress 
             value={uploadProgress} 
-            className="h-2" 
-            color={uploadProgress === 100 ? "bg-green-500" : ""}
+            className="h-2 bg-gray-200" 
+            style={{ 
+              "--tw-bg-opacity": "1",
+              backgroundColor: uploadProgress === 100 ? "black" : "rgba(var(--primary-yellow), var(--tw-bg-opacity))" 
+            } as React.CSSProperties}
           />
         </div>
       </CardHeader>
       
       <CardContent>
         {uploadProgress === 100 ? (
-          <Alert className="mb-6 bg-green-50 border-green-200">
-            <CheckCircleIcon className="h-4 w-4 text-green-600" />
-            <AlertTitle className="text-green-800">All required documents uploaded</AlertTitle>
-            <AlertDescription className="text-green-700">
+          <Alert className="mb-6 border-2 border-black bg-gray-50">
+            <CheckCircleIcon className="h-5 w-5 text-black" />
+            <AlertTitle className="text-black font-semibold text-lg">All required documents uploaded</AlertTitle>
+            <AlertDescription className="text-gray-700">
               Thank you for uploading all the required documents. You can proceed with the next steps of your onboarding process.
             </AlertDescription>
           </Alert>
         ) : (
-          <Alert className="mb-6 bg-blue-50 border-blue-200">
-            <InfoIcon className="h-4 w-4 text-blue-600" />
-            <AlertTitle className="text-blue-800">Document Upload Instructions</AlertTitle>
-            <AlertDescription className="text-blue-700">
+          <Alert className="mb-6 border-2 border-yellow-500 bg-yellow-50">
+            <InfoIcon className="h-5 w-5 text-yellow-600" />
+            <AlertTitle className="text-gray-800 font-semibold text-lg">Document Upload Instructions</AlertTitle>
+            <AlertDescription className="text-gray-700">
               Please upload all required documents marked with (*). Accepted file formats include JPG, PNG, PDF, DOC, and DOCX. Maximum file size is {getFileSizeLimit()} MB per document.
             </AlertDescription>
           </Alert>
         )}
         
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid grid-cols-4 mb-6">
+          <TabsList className="grid grid-cols-4 mb-8 p-1 rounded-xl bg-gray-100">
             {documentCategories.map(category => {
               const catProgress = getCategoryProgress(category.id);
               return (
                 <TabsTrigger 
                   key={category.id} 
                   value={category.id}
-                  className="flex items-center gap-2 relative"
+                  className="flex items-center justify-center gap-2 relative py-3 data-[state=active]:bg-white data-[state=active]:text-black data-[state=active]:shadow-md data-[state=active]:rounded-lg data-[state=active]:font-medium transition-all duration-200"
                 >
-                  {category.icon}
+                  <div className="relative">
+                    {category.icon}
+                    {catProgress.total > 0 && catProgress.completed === catProgress.total && (
+                      <span className="absolute -top-1 -right-1 bg-black rounded-full w-3 h-3 border border-white"></span>
+                    )}
+                  </div>
                   <span className="hidden sm:inline">{category.name}</span>
-                  {catProgress.total > 0 && catProgress.completed === catProgress.total && (
-                    <span className="absolute -top-1 -right-1 bg-green-500 rounded-full w-3 h-3"></span>
-                  )}
                 </TabsTrigger>
               );
             })}
@@ -493,30 +523,36 @@ export default function OnboardingDocumentUpload() {
             
             return (
               <TabsContent key={category.id} value={category.id}>
-                <div className="mb-6">
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2">
+                <div className="mb-8">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3">
                     <div>
-                      <h3 className="text-lg font-medium flex items-center">
+                      <h3 className="text-xl font-semibold flex items-center text-gray-900">
                         {category.name}
                         {requiredDocs.length > 0 && catProgress.completed === requiredDocs.length && (
-                          <CheckCircleIcon className="ml-2 h-5 w-5 text-green-500" />
+                          <CheckCircleIcon className="ml-2 h-5 w-5 text-black" />
                         )}
                       </h3>
-                      <p className="text-neutral-medium">{category.description}</p>
+                      <p className="text-gray-600 mt-1">{category.description}</p>
                     </div>
                     
                     {requiredDocs.length > 0 && (
-                      <div className="mt-2 sm:mt-0 flex items-center">
-                        <span className="text-sm mr-2">
-                          {catProgress.completed}/{catProgress.total} Required
-                        </span>
-                        <span className={`px-2 py-1 rounded-full text-xs ${
-                          catProgress.completed === catProgress.total
-                            ? 'bg-green-100 text-green-800'
-                            : 'bg-yellow-100 text-yellow-800'
-                        }`}>
-                          {catProgress.completed === catProgress.total ? 'Complete' : 'In Progress'}
-                        </span>
+                      <div className="mt-3 sm:mt-0 flex items-center bg-gray-100 px-4 py-2 rounded-lg">
+                        <div className="flex flex-col">
+                          <span className="text-xs uppercase tracking-wider text-gray-500 font-medium">Required</span>
+                          <span className="text-lg font-bold text-gray-900">
+                            {catProgress.completed}/{catProgress.total}
+                          </span>
+                        </div>
+                        <div className="ml-4 pl-4 border-l border-gray-300">
+                          <span className="text-xs uppercase tracking-wider text-gray-500 font-medium">Status</span>
+                          <span className={`block text-sm font-medium ${
+                            catProgress.completed === catProgress.total
+                              ? 'text-black'
+                              : 'text-yellow-600'
+                          }`}>
+                            {catProgress.completed === catProgress.total ? 'Complete' : 'In Progress'}
+                          </span>
+                        </div>
                       </div>
                     )}
                   </div>
@@ -524,8 +560,13 @@ export default function OnboardingDocumentUpload() {
                   {requiredDocs.length > 0 && (
                     <Progress 
                       value={catProgress.percent} 
-                      className="h-1 mt-2" 
-                      color={catProgress.completed === catProgress.total ? "bg-green-500" : ""}
+                      className="h-2 mt-2 bg-gray-200" 
+                      style={{ 
+                        "--tw-bg-opacity": "1",
+                        backgroundColor: catProgress.completed === catProgress.total 
+                          ? "black" 
+                          : "rgba(var(--primary-yellow), var(--tw-bg-opacity))" 
+                      } as React.CSSProperties}
                     />
                   )}
                 </div>

@@ -1,0 +1,337 @@
+/**
+ * Animations.css - Modern animations for the Wugweb Team platform
+ * 
+ * This file defines reusable CSS animations, keyframes, and utility classes
+ * for consistent motion design across the application.
+ */
+
+/* ===== KEYFRAME ANIMATIONS ===== */
+
+/* Fade animations */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+/* Scale animations */
+@keyframes scaleIn {
+  from { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+@keyframes scaleOut {
+  from { transform: scale(1); opacity: 1; }
+  to { transform: scale(0.95); opacity: 0; }
+}
+
+/* Slide animations */
+@keyframes slideInUp {
+  from { transform: translateY(10px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes slideInDown {
+  from { transform: translateY(-10px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes slideInLeft {
+  from { transform: translateX(-10px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes slideInRight {
+  from { transform: translateX(10px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+/* Attention animations */
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-2px); }
+  20%, 40%, 60%, 80% { transform: translateX(2px); }
+}
+
+/* Loading animations */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* Success/completion animations */
+@keyframes checkmark {
+  0% { 
+    stroke-dashoffset: 100; 
+    opacity: 0;
+  }
+  100% { 
+    stroke-dashoffset: 0; 
+    opacity: 1;
+  }
+}
+
+/* ===== ANIMATION UTILITY CLASSES ===== */
+
+/* Animation durations */
+.duration-75 {
+  animation-duration: 75ms;
+}
+
+.duration-100 {
+  animation-duration: 100ms;
+}
+
+.duration-150 {
+  animation-duration: 150ms;
+}
+
+.duration-200 {
+  animation-duration: 200ms;
+}
+
+.duration-300 {
+  animation-duration: 300ms;
+}
+
+.duration-500 {
+  animation-duration: 500ms;
+}
+
+.duration-700 {
+  animation-duration: 700ms;
+}
+
+.duration-1000 {
+  animation-duration: 1000ms;
+}
+
+/* Animation delays */
+.delay-0 {
+  animation-delay: 0ms;
+}
+
+.delay-100 {
+  animation-delay: 100ms;
+}
+
+.delay-200 {
+  animation-delay: 200ms;
+}
+
+.delay-300 {
+  animation-delay: 300ms;
+}
+
+.delay-500 {
+  animation-delay: 500ms;
+}
+
+/* Animation timing functions */
+.ease-linear {
+  animation-timing-function: linear;
+}
+
+.ease-in {
+  animation-timing-function: cubic-bezier(0.4, 0, 1, 1);
+}
+
+.ease-out {
+  animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+}
+
+.ease-in-out {
+  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.ease-bounce {
+  animation-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Animation fill modes */
+.fill-forwards {
+  animation-fill-mode: forwards;
+}
+
+.fill-backwards {
+  animation-fill-mode: backwards;
+}
+
+.fill-both {
+  animation-fill-mode: both;
+}
+
+/* Animation iteration counts */
+.iteration-infinite {
+  animation-iteration-count: infinite;
+}
+
+/* Animation directions */
+.direction-alternate {
+  animation-direction: alternate;
+}
+
+/* ===== ANIMATION PRESETS ===== */
+
+/* Fade animations */
+.animate-fade-in {
+  animation-name: fadeIn;
+  animation-duration: var(--duration-normal);
+  animation-timing-function: var(--ease-out);
+  animation-fill-mode: both;
+}
+
+.animate-fade-out {
+  animation-name: fadeOut;
+  animation-duration: var(--duration-normal);
+  animation-timing-function: var(--ease-in);
+  animation-fill-mode: both;
+}
+
+/* Scale animations */
+.animate-scale-in {
+  animation-name: scaleIn;
+  animation-duration: var(--duration-normal);
+  animation-timing-function: var(--ease-out);
+  animation-fill-mode: both;
+}
+
+.animate-scale-out {
+  animation-name: scaleOut;
+  animation-duration: var(--duration-normal);
+  animation-timing-function: var(--ease-in);
+  animation-fill-mode: both;
+}
+
+/* Slide animations */
+.animate-slide-in-up {
+  animation-name: slideInUp;
+  animation-duration: var(--duration-normal);
+  animation-timing-function: var(--ease-out);
+  animation-fill-mode: both;
+}
+
+.animate-slide-in-down {
+  animation-name: slideInDown;
+  animation-duration: var(--duration-normal);
+  animation-timing-function: var(--ease-out);
+  animation-fill-mode: both;
+}
+
+.animate-slide-in-left {
+  animation-name: slideInLeft;
+  animation-duration: var(--duration-normal);
+  animation-timing-function: var(--ease-out);
+  animation-fill-mode: both;
+}
+
+.animate-slide-in-right {
+  animation-name: slideInRight;
+  animation-duration: var(--duration-normal);
+  animation-timing-function: var(--ease-out);
+  animation-fill-mode: both;
+}
+
+/* Attention animations */
+.animate-pulse {
+  animation-name: pulse;
+  animation-duration: 1s;
+  animation-timing-function: var(--ease-in-out);
+  animation-fill-mode: both;
+}
+
+.animate-bounce {
+  animation-name: bounce;
+  animation-duration: 1s;
+  animation-timing-function: var(--ease-bounce);
+  animation-fill-mode: both;
+  animation-iteration-count: infinite;
+}
+
+.animate-shake {
+  animation-name: shake;
+  animation-duration: 500ms;
+  animation-timing-function: var(--ease-in-out);
+  animation-fill-mode: both;
+}
+
+/* Loading animations */
+.animate-spin {
+  animation-name: spin;
+  animation-duration: 1s;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+.animate-blink {
+  animation-name: blink;
+  animation-duration: 1s;
+  animation-timing-function: ease;
+  animation-iteration-count: infinite;
+}
+
+/* Success animations */
+.animate-checkmark {
+  animation-name: checkmark;
+  animation-duration: 500ms;
+  animation-timing-function: var(--ease-out);
+  animation-fill-mode: forwards;
+}
+
+/* 
+ * Staggered animations for children
+ * Usage: Add .stagger-children to parent and .stagger-item to children
+ */
+.stagger-children .stagger-item:nth-child(1) { animation-delay: calc(1 * 50ms); }
+.stagger-children .stagger-item:nth-child(2) { animation-delay: calc(2 * 50ms); }
+.stagger-children .stagger-item:nth-child(3) { animation-delay: calc(3 * 50ms); }
+.stagger-children .stagger-item:nth-child(4) { animation-delay: calc(4 * 50ms); }
+.stagger-children .stagger-item:nth-child(5) { animation-delay: calc(5 * 50ms); }
+.stagger-children .stagger-item:nth-child(6) { animation-delay: calc(6 * 50ms); }
+.stagger-children .stagger-item:nth-child(7) { animation-delay: calc(7 * 50ms); }
+.stagger-children .stagger-item:nth-child(8) { animation-delay: calc(8 * 50ms); }
+.stagger-children .stagger-item:nth-child(9) { animation-delay: calc(9 * 50ms); }
+.stagger-children .stagger-item:nth-child(10) { animation-delay: calc(10 * 50ms); }
+
+/* Slower stagger for more dramatic effect */
+.stagger-children-slow .stagger-item:nth-child(1) { animation-delay: calc(1 * 100ms); }
+.stagger-children-slow .stagger-item:nth-child(2) { animation-delay: calc(2 * 100ms); }
+.stagger-children-slow .stagger-item:nth-child(3) { animation-delay: calc(3 * 100ms); }
+.stagger-children-slow .stagger-item:nth-child(4) { animation-delay: calc(4 * 100ms); }
+.stagger-children-slow .stagger-item:nth-child(5) { animation-delay: calc(5 * 100ms); }
+.stagger-children-slow .stagger-item:nth-child(6) { animation-delay: calc(6 * 100ms); }
+.stagger-children-slow .stagger-item:nth-child(7) { animation-delay: calc(7 * 100ms); }
+.stagger-children-slow .stagger-item:nth-child(8) { animation-delay: calc(8 * 100ms); }
+.stagger-children-slow .stagger-item:nth-child(9) { animation-delay: calc(9 * 100ms); }
+.stagger-children-slow .stagger-item:nth-child(10) { animation-delay: calc(10 * 100ms); }
+
+/* ===== MOTION PREFERENCE SUPPORT ===== */
+
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
