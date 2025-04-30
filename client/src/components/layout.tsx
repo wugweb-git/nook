@@ -40,7 +40,7 @@ export default function Layout({ children, title = "Dashboard", isLoading = fals
   }, [mobileMenuOpen]);
 
   return (
-    <div className="flex h-screen w-full bg-white">
+    <div className="flex h-screen w-full bg-white overflow-hidden">
       {/* Mobile menu overlay */}
       <AnimatePresence>
         {mobileMenuOpen && (
@@ -55,16 +55,21 @@ export default function Layout({ children, title = "Dashboard", isLoading = fals
         )}
       </AnimatePresence>
 
-      {/* Sidebar - visible on desktop at all times, toggleable on mobile */}
-      <div className="fixed inset-y-0 left-0 z-50 lg:relative lg:z-0">
+      {/* Sidebar */}
+      <div className={`
+        fixed lg:relative inset-y-0 left-0
+        transform transition-transform duration-300 ease-in-out
+        ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+        z-50 lg:z-0 w-64 h-full
+      `}>
         <Sidebar 
-          isOpen={mobileMenuOpen} 
+          isOpen={mobileMenuOpen || window.innerWidth >= 1024} 
           onClose={() => setMobileMenuOpen(false)} 
         />
       </div>
 
       {/* Main content */}
-      <main className="flex-1 min-h-screen bg-neutral-50 overflow-auto">
+      <main className="flex-1 min-h-screen bg-neutral-50 overflow-auto w-full lg:w-[calc(100%-16rem)]">
         <LoadingOverlay isLoading={isLoading}>
           <Header 
             title={title} 
