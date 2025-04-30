@@ -1,3 +1,7 @@
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { StackbitProvider } from '@stackbit/components';
+import { GitContentSource } from '@stackbit/cms-git';
 import { Switch, Route } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -31,6 +35,23 @@ import { useAuth } from "@/hooks/useAuth";
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { OnboardingProtectedRoute } from "@/lib/onboarding-protected-route";
+
+const contentSource = new GitContentSource({
+  rootPath: process.cwd(),
+  contentDirs: ['content'],
+  models: {
+    Page: {
+      type: 'page',
+      urlPath: '/{slug}',
+      filePath: 'content/pages/{slug}.md',
+      fields: [
+        { name: 'title', type: 'string', required: true },
+        { name: 'layout', type: 'string', required: true },
+        { name: 'sections', type: 'list', items: { type: 'model', models: ['HeroSection', 'FeaturesSection'] } }
+      ]
+    }
+  }
+});
 
 function ProtectedRoute({ component: Component, ...rest }: { component: React.ComponentType<any>, [x: string]: any }) {
   const { user, loading } = useAuth();
@@ -225,14 +246,33 @@ function Router() {
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <div className="app-container relative h-screen">
-          <Router />
-        </div>
-      </TooltipProvider>
-    </QueryClientProvider>
+    <StackbitProvider contentSource={contentSource}>
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <Toaster />
+          <div className="app-container relative h-screen">
+            <Router />
+          </div>
+        </TooltipProvider>
+      </QueryClientProvider>
+    </StackbitProvider>
+  );
+}
+
+function Home() {
+  return (
+    <div>
+      <h1>Welcome to HRMS</h1>
+      <p>Human Resource Management System</p>
+    </div>
+  );
+}
+
+function Page() {
+  return (
+    <div>
+      <h1>Page Content</h1>
+    </div>
   );
 }
 

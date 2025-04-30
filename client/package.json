@@ -1,0 +1,20 @@
+{
+  "name": "hrms-client",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@stackbit/components": "^0.1.0",
+    "@stackbit/cms-git": "^0.1.0",
+    "@stackbit/types": "^0.1.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.22.0",
+    "typescript": "^5.3.3",
+    "vite": "^5.0.12"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
+  }
+} 
