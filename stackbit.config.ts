@@ -14,6 +14,11 @@ export default defineStackbitConfig({
   stackbitVersion: "~0.6.0",
   ssgName: "nextjs",
   nodeVersion: "18",
+  preview: {
+    workingBranch: "preview",
+    runnableDirectory: "client",
+    visualEditorLandingPage: "index.html"
+  },
   contentSources: [
     new GitContentSource({
       rootPath: __dirname,
