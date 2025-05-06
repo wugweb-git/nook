@@ -1,0 +1,10 @@
+{
+    "configurations": [
+        {
+            "type": "chrome",
+            "name": "https://nook.wugweb.agency/",
+            "request": "launch",
+            "url": "https://nook.wugweb.agency/"
+        }
+    ]
+}

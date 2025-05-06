@@ -1,0 +1,29 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+  functions = "netlify/functions"
+
+[build.environment]
+  SUPABASE_URL = "https://lgfztypaflmeqfvwunps.supabase.co"
+  SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxnZnp0eXBhZmxtZXFmdnd1bnBzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU5MjE4MjMsImV4cCI6MjA2MTQ5NzgyM30.glN9qH-7Q9a9c3Wio1m2t8p_Qj9K53XJdDtI_Hp56Vw"
+
+[dev]
+  command = "npm run dev"
+  targetPort = 5173
+  port = 8888
+  publish = "dist"
+  framework = "#custom"
+  autoLaunch = true
+
+# Handle all API routes
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/api/:splat"
+  status = 200
+  force = true
+
+# Handle client-side routing
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200 
