@@ -117,6 +117,9 @@ export default function Login() {
   const onLoginSubmit = async (values: z.infer<typeof extendedLoginSchema>) => {
     setError(null);
     try {
+      if (!values.email || !values.password) {
+        throw new Error("Please enter both email and password");
+      }
       await login({
         email: values.email,
         password: values.password,
@@ -133,13 +136,13 @@ export default function Login() {
       if (values.password !== values.confirmPassword) {
         throw new Error("Passwords do not match");
       }
-      
+
       // Generate a username automatically from firstName and lastName
       const firstName = values.firstName.toLowerCase().replace(/[^a-z0-9]/g, '');
       const lastName = values.lastName.toLowerCase().replace(/[^a-z0-9]/g, '');
       const randomDigits = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
       const generatedUsername = `${firstName}.${lastName}.${randomDigits}`;
-      
+
       // Call the register API with our userData including the auto-generated username
       await register({
         username: generatedUsername,
@@ -175,7 +178,7 @@ export default function Login() {
               Access to thousands of HR tools and templates
             </p>
           </div>
-          
+
           {/* Modern Geometric Pattern */}
           <div className="relative h-64 w-full">
             <div className="absolute top-0 left-8 w-16 h-16 rounded-full border-2 border-yellow-500 animate-pulse"></div>
@@ -219,7 +222,7 @@ export default function Login() {
             </div>
             <div className="absolute bottom-0 right-8 w-16 h-16 rounded-full border-2 border-yellow-500 animate-pulse"></div>
           </div>
-          
+
           {/* Indicator Dots */}
           <div className="flex mt-12 space-x-2">
             <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
@@ -229,14 +232,14 @@ export default function Login() {
           </div>
         </div>
       </div>
-      
+
       {/* Right Column - Auth Form */}
       <div className="md:w-1/2 flex items-center justify-center p-6 md:p-12 bg-white">
         <div className="w-full max-w-md">
           <div className="mb-8">
             <h2 className="text-3xl font-bold">Sign up now</h2>
           </div>
-          
+
           <Tabs defaultValue="register" className="w-full">
             <TabsList className="w-full grid grid-cols-2 rounded-lg mb-6">
               <TabsTrigger value="login" className="rounded-lg py-2">
@@ -246,7 +249,7 @@ export default function Login() {
                 Register
               </TabsTrigger>
             </TabsList>
-            
+
             <TabsContent value="login" className="m-0">
               {error && (
                 <Alert variant="destructive" className="mb-4">
@@ -307,7 +310,7 @@ export default function Login() {
                         Remember me
                       </label>
                     </div>
-                    
+
                     <Dialog open={isForgotPasswordOpen} onOpenChange={setIsForgotPasswordOpen}>
                       <DialogTrigger asChild>
                         <Button variant="link" className="h-auto p-0 text-sm">
@@ -362,7 +365,7 @@ export default function Login() {
                   >
                     {isLoggingIn ? "Signing in..." : "Sign In"}
                   </ModernButton>
-                  
+
                   <div className="pt-4 text-center">
                     <p className="text-sm text-neutral-6">
                       Already have an account? <Link href="/auth" className="font-medium text-primary underline">Log in</Link>
@@ -371,14 +374,14 @@ export default function Login() {
                 </form>
               </Form>
             </TabsContent>
-            
+
             <TabsContent value="register" className="m-0">
               {error && (
                 <Alert variant="destructive" className="mb-4">
                   <AlertDescription>{error}</AlertDescription>
                 </Alert>
               )}
-              
+
               <Form {...registerForm}>
                 <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-5">
                   <div className="grid grid-cols-2 gap-4">
@@ -395,7 +398,7 @@ export default function Login() {
                         </FormItem>
                       )}
                     />
-                    
+
                     <FormField
                       control={registerForm.control}
                       name="lastName"
@@ -410,7 +413,7 @@ export default function Login() {
                       )}
                     />
                   </div>
-                  
+
                   <FormField
                     control={registerForm.control}
                     name="email"
@@ -427,14 +430,14 @@ export default function Login() {
                       </FormItem>
                     )}
                   />
-                  
+
                   {/* Username is now auto-generated */}
                   <div className="mb-2 px-1">
                     <p className="text-sm text-neutral-500">
                       Your username will be automatically generated from your name
                     </p>
                   </div>
-                  
+
                   <FormField
                     control={registerForm.control}
                     name="password"
@@ -451,7 +454,7 @@ export default function Login() {
                       </FormItem>
                     )}
                   />
-                  
+
                   <FormField
                     control={registerForm.control}
                     name="confirmPassword"
@@ -465,7 +468,7 @@ export default function Login() {
                       </FormItem>
                     )}
                   />
-                  
+
                   <FormField
                     control={registerForm.control}
                     name="acceptTerms"
@@ -495,7 +498,7 @@ export default function Login() {
                       </label>
                     </div>
                   </div>
-                  
+
                   <ModernButton 
                     type="submit" 
                     className="w-full"
@@ -510,7 +513,7 @@ export default function Login() {
                       <ArrowRight className="h-4 w-4 ml-2" />
                     </div>
                   </ModernButton>
-                  
+
                   <div className="pt-4 text-center">
                     <p className="text-sm text-neutral-6">
                       Already have an account? <Link href="/auth" className="font-medium text-primary underline">Log in</Link>

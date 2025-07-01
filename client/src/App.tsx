@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+//mport { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { StackbitProvider } from '@stackbit/components';
 import { GitContentSource } from '@stackbit/cms-git';
 import { Switch, Route } from "wouter";

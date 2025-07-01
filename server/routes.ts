@@ -9,6 +9,7 @@ import { ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
 import session from "express-session";
 import MemoryStore from "memorystore";
+import { exportToExcel, exportToCSV, exportToPDF } from "./exportUtils";
 
 // Extend express-session with our custom properties
 declare module "express-session" {
@@ -772,6 +773,199 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(200).json({ message: "Dashboard deleted successfully" });
     } catch (error) {
       return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Data Export Routes
+  // Export users data
+  apiRouter.get("/export/users/:format", isAdmin, async (req, res) => {
+    try {
+      const format = req.params.format.toLowerCase();
+      const users = await storage.getUsers();
+
+      // Remove sensitive information like passwords
+      const sanitizedUsers = users.map(user => {
+        const { password, ...sanitizedUser } = user;
+        return sanitizedUser;
+      });
+
+      const filename = `users-export-${new Date().toISOString().split('T')[0]}`;
+      
+      switch (format) {
+        case 'excel':
+          await exportToExcel(res, sanitizedUsers, filename);
+          break;
+        case 'csv':
+          exportToCSV(res, sanitizedUsers, filename);
+          break;
+        case 'pdf':
+          exportToPDF(res, sanitizedUsers, filename, 'Users Report');
+          break;
+        default:
+          return res.status(400).json({ message: "Unsupported export format" });
+      }
+    } catch (error) {
+      console.error("Export error:", error);
+      return res.status(500).json({ message: "Failed to export data" });
+    }
+  });
+
+  // Export documents data
+  apiRouter.get("/export/documents/:format", isAuthenticated, async (req, res) => {
+    try {
+      const format = req.params.format.toLowerCase();
+      const userId = req.session.userId!;
+      const user = await storage.getUser(userId);
+      
+      // Admins can export all documents, employees only their own
+      const documents = user?.role === 'admin' 
+        ? await storage.getDocuments()
+        : await storage.getDocumentsByUserId(userId);
+
+      const filename = `documents-export-${new Date().toISOString().split('T')[0]}`;
+      
+      switch (format) {
+        case 'excel':
+          await exportToExcel(res, documents, filename);
+          break;
+        case 'csv':
+          exportToCSV(res, documents, filename);
+          break;
+        case 'pdf':
+          exportToPDF(res, documents, filename, 'Documents Report');
+          break;
+        default:
+          return res.status(400).json({ message: "Unsupported export format" });
+      }
+    } catch (error) {
+      console.error("Export error:", error);
+      return res.status(500).json({ message: "Failed to export data" });
+    }
+  });
+
+  // Export onboarding data
+  apiRouter.get("/export/onboarding/:format", isAdmin, async (req, res) => {
+    try {
+      const format = req.params.format.toLowerCase();
+      const users = await storage.getUsers();
+      
+      // Collect onboarding data for all users
+      const onboardingData = [];
+      for (const user of users) {
+        const onboardingRecords = await storage.getEmployeeOnboardingByUserId(user.id);
+        
+        for (const record of onboardingRecords) {
+          onboardingData.push({
+            userId: user.id,
+            username: user.username,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            email: user.email,
+            stepId: record.stepId,
+            stepName: record.step.name,
+            status: record.status,
+            completedAt: record.completedAt
+          });
+        }
+      }
+
+      const filename = `onboarding-export-${new Date().toISOString().split('T')[0]}`;
+      
+      switch (format) {
+        case 'excel':
+          await exportToExcel(res, onboardingData, filename);
+          break;
+        case 'csv':
+          exportToCSV(res, onboardingData, filename);
+          break;
+        case 'pdf':
+          exportToPDF(res, onboardingData, filename, 'Onboarding Status Report');
+          break;
+        default:
+          return res.status(400).json({ message: "Unsupported export format" });
+      }
+    } catch (error) {
+      console.error("Export error:", error);
+      return res.status(500).json({ message: "Failed to export data" });
+    }
+  });
+
+  // Export events data
+  apiRouter.get("/export/events/:format", isAuthenticated, async (req, res) => {
+    try {
+      const format = req.params.format.toLowerCase();
+      const events = await storage.getEvents();
+
+      const filename = `events-export-${new Date().toISOString().split('T')[0]}`;
+      
+      switch (format) {
+        case 'excel':
+          await exportToExcel(res, events, filename);
+          break;
+        case 'csv':
+          exportToCSV(res, events, filename);
+          break;
+        case 'pdf':
+          exportToPDF(res, events, filename, 'Events Report');
+          break;
+        default:
+          return res.status(400).json({ message: "Unsupported export format" });
+      }
+    } catch (error) {
+      console.error("Export error:", error);
+      return res.status(500).json({ message: "Failed to export data" });
+    }
+  });
+
+  // Export time off balances data for admins
+  apiRouter.get("/export/timeoff/:format", isAdmin, async (req, res) => {
+    try {
+      const format = req.params.format.toLowerCase();
+      const users = await storage.getUsers();
+      
+      // Collect time off data for all users
+      const timeOffData = [];
+      for (const user of users) {
+        const timeOffBalance = await storage.getTimeOffBalanceByUserId(user.id);
+        
+        if (timeOffBalance) {
+          timeOffData.push({
+            userId: user.id,
+            username: user.username,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            email: user.email,
+            vacationTotal: timeOffBalance.vacationTotal,
+            vacationUsed: timeOffBalance.vacationUsed,
+            vacationRemaining: timeOffBalance.vacationTotal - timeOffBalance.vacationUsed,
+            sickTotal: timeOffBalance.sickTotal,
+            sickUsed: timeOffBalance.sickUsed,
+            sickRemaining: timeOffBalance.sickTotal - timeOffBalance.sickUsed,
+            personalTotal: timeOffBalance.personalTotal,
+            personalUsed: timeOffBalance.personalUsed,
+            personalRemaining: timeOffBalance.personalTotal - timeOffBalance.personalUsed
+          });
+        }
+      }
+
+      const filename = `timeoff-export-${new Date().toISOString().split('T')[0]}`;
+      
+      switch (format) {
+        case 'excel':
+          await exportToExcel(res, timeOffData, filename);
+          break;
+        case 'csv':
+          exportToCSV(res, timeOffData, filename);
+          break;
+        case 'pdf':
+          exportToPDF(res, timeOffData, filename, 'Time Off Balances Report');
+          break;
+        default:
+          return res.status(400).json({ message: "Unsupported export format" });
+      }
+    } catch (error) {
+      console.error("Export error:", error);
+      return res.status(500).json({ message: "Failed to export data" });
     }
   });
   

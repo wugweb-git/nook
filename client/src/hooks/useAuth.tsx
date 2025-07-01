@@ -26,18 +26,18 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 // Auth Provider Component
 export function AuthProvider({ children }: { children: ReactNode }) {
   const auth = useAuthProvider();
-  
+
   return <AuthContext.Provider value={auth}>{children}</AuthContext.Provider>;
 }
 
 // Hook for consumers to use
 export function useAuth() {
   const context = useContext(AuthContext);
-  
+
   if (!context) {
     throw new Error("useAuth must be used within an AuthProvider");
   }
-  
+
   return context;
 }
 
@@ -45,20 +45,20 @@ export function useAuth() {
 function useAuthProvider() {
   const { toast } = useToast();
   const [initialLoadComplete, setInitialLoadComplete] = useState(false);
-  
+
   // Check if user is already authenticated
   const { data, isLoading, isError } = useQuery<{ user: User }>({
     queryKey: ["/api/auth/session"],
     refetchOnWindowFocus: true,
     retry: false,
   });
-  
+
   useEffect(() => {
     if (!isLoading) {
       setInitialLoadComplete(true);
     }
   }, [isLoading]);
-  
+
   // Login mutation
   const { mutate: login, isPending: isLoggingIn } = useMutation({
     mutationFn: async (credentials: LoginCredentials) => {
@@ -80,7 +80,7 @@ function useAuthProvider() {
       });
     },
   });
-  
+
   // Register mutation
   const { mutate: register, isPending: isRegistering } = useMutation({
     mutationFn: async (userData: InsertUser) => {
@@ -102,7 +102,7 @@ function useAuthProvider() {
       });
     },
   });
-  
+
   // Logout mutation
   const { mutate: logout, isPending: isLoggingOut } = useMutation({
     mutationFn: async () => {
@@ -124,7 +124,7 @@ function useAuthProvider() {
       });
     },
   });
-  
+
   // Update user mutation
   const { mutate: updateUser, isPending: isUpdating } = useMutation({
     mutationFn: async (userData: Partial<User>) => {
@@ -146,7 +146,7 @@ function useAuthProvider() {
       });
     },
   });
-  
+
   return {
     user: data?.user,
     isLoading,

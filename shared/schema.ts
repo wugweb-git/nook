@@ -1,4 +1,5 @@
-import { pgTable, text, serial, integer, boolean, timestamp, json } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, json, index } from "drizzle-orm/pg-core";
+import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -58,7 +59,27 @@ export const users = pgTable("users", {
   probationEndDate: timestamp("probation_end_date"),
   employmentType: text("employment_type"), // "full-time", "part-time", "contract", "intern"
   workLocation: text("work_location"), // "remote", "office", "hybrid"
+  
+  // Onboarding status
+  isOnboarded: boolean("is_onboarded").notNull().default(false),
+  onboardingCompletedAt: timestamp("onboarding_completed_at"),
+}, (table) => {
+  return {
+    emailIdx: index("email_idx").on(table.email),
+    nameIdx: index("name_idx").on(table.firstName, table.lastName),
+    onboardedIdx: index("onboarded_idx").on(table.isOnboarded),
+    roleIdx: index("role_idx").on(table.role),
+    departmentIdx: index("department_idx").on(table.department),
+  };
 });
+
+export const usersRelations = relations(users, ({ many }) => ({
+  employeeOnboarding: many(employeeOnboarding, { relationName: "user_onboarding" }),
+  documents: many(documents, { relationName: "user_documents" }),
+  events: many(events, { relationName: "user_events" }),
+  timeOffBalance: many(timeOffBalances, { relationName: "user_timeoff" }),
+  reportDashboards: many(reportDashboards, { relationName: "user_dashboards" }),
+}));
 
 export const onboardingSteps = pgTable("onboarding_steps", {
   id: serial("id").primaryKey(),
@@ -67,19 +88,39 @@ export const onboardingSteps = pgTable("onboarding_steps", {
   order: integer("order").notNull(),
 });
 
+export const onboardingStepsRelations = relations(onboardingSteps, ({ many }) => ({
+  employeeOnboarding: many(employeeOnboarding)
+}));
+
 export const employeeOnboarding = pgTable("employee_onboarding", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull(),
   stepId: integer("step_id").notNull(),
   status: text("status").notNull().default("not_started"), // "not_started", "in_progress", "completed"
   completedAt: timestamp("completed_at"),
+}, (table) => {
+  return {
+    userIdIdx: index("employee_onboarding_user_id_idx").on(table.userId),
+    stepIdIdx: index("employee_onboarding_step_id_idx").on(table.stepId),
+    statusIdx: index("employee_onboarding_status_idx").on(table.status),
+    userStepIdx: index("employee_onboarding_user_step_idx").on(table.userId, table.stepId),
+  };
 });
+
+export const employeeOnboardingRelations = relations(employeeOnboarding, ({ one }) => ({
+  user: one(users, { fields: [employeeOnboarding.userId], references: [users.id], relationName: "user_onboarding" }),
+  step: one(onboardingSteps, { fields: [employeeOnboarding.stepId], references: [onboardingSteps.id] })
+}));
 
 export const documentCategories = pgTable("document_categories", {
   id: serial("id").primaryKey(),
   name: text("name").notNull().unique(),
   description: text("description"),
 });
+
+export const documentCategoriesRelations = relations(documentCategories, ({ many }) => ({
+  documents: many(documents)
+}));
 
 export const documents = pgTable("documents", {
   id: serial("id").primaryKey(),
@@ -95,6 +136,18 @@ export const documents = pgTable("documents", {
   metadata: json("metadata"),
 });
 
+export const documentsRelations = relations(documents, ({ one }) => ({
+  category: one(documentCategories, {
+    fields: [documents.categoryId],
+    references: [documentCategories.id]
+  }),
+  uploader: one(users, {
+    fields: [documents.uploadedBy],
+    references: [users.id],
+    relationName: "user_documents"
+  })
+}));
+
 export const events = pgTable("events", {
   id: serial("id").primaryKey(),
   title: text("title").notNull(),
@@ -105,6 +158,14 @@ export const events = pgTable("events", {
   category: text("category"),
   createdBy: integer("created_by").notNull(),
 });
+
+export const eventsRelations = relations(events, ({ one }) => ({
+  creator: one(users, {
+    fields: [events.createdBy],
+    references: [users.id],
+    relationName: "user_events"
+  })
+}));
 
 export const timeOffBalances = pgTable("time_off_balances", {
   id: serial("id").primaryKey(),
@@ -117,6 +178,14 @@ export const timeOffBalances = pgTable("time_off_balances", {
   personalUsed: integer("personal_used").notNull().default(0),
 });
 
+export const timeOffBalancesRelations = relations(timeOffBalances, ({ one }) => ({
+  user: one(users, {
+    fields: [timeOffBalances.userId],
+    references: [users.id],
+    relationName: "user_timeoff"
+  })
+}));
+
 export const reportDashboards = pgTable("report_dashboards", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull(),
@@ -125,11 +194,21 @@ export const reportDashboards = pgTable("report_dashboards", {
   isDefault: boolean("is_default").notNull().default(false),
 });
 
+export const reportDashboardsRelations = relations(reportDashboards, ({ one }) => ({
+  user: one(users, {
+    fields: [reportDashboards.userId],
+    references: [users.id],
+    relationName: "user_dashboards"
+  })
+}));
+
 // Insert schemas
 
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
   lastLogin: true,
+  isOnboarded: true,
+  onboardingCompletedAt: true,
 });
 
 export const insertOnboardingStepSchema = createInsertSchema(onboardingSteps).omit({

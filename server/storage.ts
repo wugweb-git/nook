@@ -24,6 +24,8 @@ import {
   type ReportDashboard,
   type InsertReportDashboard,
 } from "@shared/schema";
+import { db } from "./db";
+import { eq, and, desc } from "drizzle-orm";
 
 export interface IStorage {
   // User operations
@@ -33,22 +35,32 @@ export interface IStorage {
   getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: number, user: Partial<User>): Promise<User | undefined>;
-  
+
   // Onboarding steps operations
   getOnboardingSteps(): Promise<OnboardingStep[]>;
   getOnboardingStep(id: number): Promise<OnboardingStep | undefined>;
   createOnboardingStep(step: InsertOnboardingStep): Promise<OnboardingStep>;
-  
+
   // Employee onboarding operations
-  getEmployeeOnboardingByUserId(userId: number): Promise<(EmployeeOnboarding & { step: OnboardingStep })[]>;
-  updateEmployeeOnboardingStatus(id: number, status: string, completedAt?: Date): Promise<EmployeeOnboarding | undefined>;
-  createEmployeeOnboardingRecord(record: InsertEmployeeOnboarding): Promise<EmployeeOnboarding>;
-  
+  getEmployeeOnboardingByUserId(
+    userId: number,
+  ): Promise<(EmployeeOnboarding & { step: OnboardingStep })[]>;
+  updateEmployeeOnboardingStatus(
+    id: number,
+    status: string,
+    completedAt?: Date,
+  ): Promise<EmployeeOnboarding | undefined>;
+  createEmployeeOnboardingRecord(
+    record: InsertEmployeeOnboarding,
+  ): Promise<EmployeeOnboarding>;
+
   // Document categories operations
   getDocumentCategories(): Promise<DocumentCategory[]>;
   getDocumentCategory(id: number): Promise<DocumentCategory | undefined>;
-  createDocumentCategory(category: InsertDocumentCategory): Promise<DocumentCategory>;
-  
+  createDocumentCategory(
+    category: InsertDocumentCategory,
+  ): Promise<DocumentCategory>;
+
   // Documents operations
   getDocuments(): Promise<Document[]>;
   getDocumentsByUserId(userId: number): Promise<Document[]>;
@@ -56,24 +68,36 @@ export interface IStorage {
   getDocument(id: number): Promise<Document | undefined>;
   createDocument(document: InsertDocument): Promise<Document>;
   deleteDocument(id: number): Promise<boolean>;
-  
+
   // Events operations
   getEvents(): Promise<Event[]>;
   getEventsByUserId(userId: number): Promise<Event[]>;
   getEvent(id: number): Promise<Event | undefined>;
   createEvent(event: InsertEvent): Promise<Event>;
-  
+
   // Time off balance operations
-  getTimeOffBalanceByUserId(userId: number): Promise<TimeOffBalance | undefined>;
+  getTimeOffBalanceByUserId(
+    userId: number,
+  ): Promise<TimeOffBalance | undefined>;
   createTimeOffBalance(timeOff: InsertTimeOffBalance): Promise<TimeOffBalance>;
-  updateTimeOffBalance(userId: number, updates: Partial<TimeOffBalance>): Promise<TimeOffBalance | undefined>;
-  
+  updateTimeOffBalance(
+    userId: number,
+    updates: Partial<TimeOffBalance>,
+  ): Promise<TimeOffBalance | undefined>;
+
   // Report dashboard operations
   getReportDashboardsByUserId(userId: number): Promise<ReportDashboard[]>;
   getReportDashboard(id: number): Promise<ReportDashboard | undefined>;
-  getDefaultReportDashboardForUser(userId: number): Promise<ReportDashboard | undefined>;
-  createReportDashboard(dashboard: InsertReportDashboard): Promise<ReportDashboard>;
-  updateReportDashboard(id: number, updates: Partial<ReportDashboard>): Promise<ReportDashboard | undefined>;
+  getDefaultReportDashboardForUser(
+    userId: number,
+  ): Promise<ReportDashboard | undefined>;
+  createReportDashboard(
+    dashboard: InsertReportDashboard,
+  ): Promise<ReportDashboard>;
+  updateReportDashboard(
+    id: number,
+    updates: Partial<ReportDashboard>,
+  ): Promise<ReportDashboard | undefined>;
   deleteReportDashboard(id: number): Promise<boolean>;
 }
 
@@ -86,7 +110,7 @@ export class MemStorage implements IStorage {
   private events: Map<number, Event>;
   private timeOffBalances: Map<number, TimeOffBalance>;
   private reportDashboards: Map<number, ReportDashboard>;
-  
+
   private currentIds: {
     users: number;
     onboardingSteps: number;
@@ -107,7 +131,7 @@ export class MemStorage implements IStorage {
     this.events = new Map();
     this.timeOffBalances = new Map();
     this.reportDashboards = new Map();
-    
+
     this.currentIds = {
       users: 1,
       onboardingSteps: 1,
@@ -118,7 +142,7 @@ export class MemStorage implements IStorage {
       timeOffBalances: 1,
       reportDashboards: 1,
     };
-    
+
     // Initialize with default data
     this.initializeDefaultData();
   }
@@ -137,30 +161,30 @@ export class MemStorage implements IStorage {
       avatar: "/uploads/profile/vedanshu.jpg",
       gender: "male",
       jobArea: "Human Resources",
-      
+
       // Social media
       linkedin: "linkedin.com/in/vedanshu",
       github: "github.com/vedanshu",
       twitter: "twitter.com/vedanshu",
       website: "vedanshu.dev",
-      
+
       // Government IDs
       panNumber: "ABCDE1234F",
       aadhaarNumber: "1234-5678-9012",
-      
+
       // Financial details
       pfNumber: "PF98765432",
       uanNumber: "UAN87654321",
       bankAccountNumber: "1234567890",
       bankName: "HDFC Bank",
       ifscCode: "HDFC0001234",
-      
+
       // Contact details
       phoneNumber: "+91 98765 43210",
       emergencyContactName: "Rahul Srivastava",
       emergencyContactNumber: "+91 87654 32109",
       emergencyContactRelation: "Brother",
-      
+
       // Address
       currentAddress: "123 Main Street, Koramangala",
       permanentAddress: "123 Main Street, Koramangala",
@@ -168,7 +192,7 @@ export class MemStorage implements IStorage {
       state: "Karnataka",
       country: "India",
       pincode: "560034",
-      
+
       // Employment details
       employeeId: "WUG0001",
       joiningDate: new Date("2020-01-15"),
@@ -176,38 +200,62 @@ export class MemStorage implements IStorage {
       employmentType: "full-time",
       workLocation: "hybrid",
     };
-    
+
     const vedanshu = this.createUser(adminUser);
-    
+
     // Create default onboarding steps
     const steps: InsertOnboardingStep[] = [
-      { name: "Personal Information", description: "Complete your personal information", order: 1 },
-      { name: "Employment Details", description: "Verify your employment details", order: 2 },
-      { name: "Tax Information", description: "Provide your tax information", order: 3 },
-      { name: "Company Policy Acknowledgement", description: "Read and acknowledge company policies", order: 4 },
-      { name: "Equipment Setup", description: "Setup your company equipment", order: 5 },
+      {
+        name: "Personal Information",
+        description: "Complete your personal information",
+        order: 1,
+      },
+      {
+        name: "Employment Details",
+        description: "Verify your employment details",
+        order: 2,
+      },
+      {
+        name: "Tax Information",
+        description: "Provide your tax information",
+        order: 3,
+      },
+      {
+        name: "Company Policy Acknowledgement",
+        description: "Read and acknowledge company policies",
+        order: 4,
+      },
+      {
+        name: "Equipment Setup",
+        description: "Setup your company equipment",
+        order: 5,
+      },
     ];
-    
-    const createdSteps = steps.map(step => this.createOnboardingStep(step));
-    
+
+    const createdSteps = steps.map((step) => this.createOnboardingStep(step));
+
     // Mark all onboarding steps as completed for admin user
     if (vedanshu && createdSteps.length === 5) {
       // Set completion dates with appropriate spacing
       const now = new Date();
-      
+
       for (let i = 0; i < 5; i++) {
         const completedDate = new Date(now);
         completedDate.setDate(completedDate.getDate() - (30 - i * 5)); // Completed over the last month
-        
+
         const record = this.createEmployeeOnboardingRecord({
           userId: vedanshu.id,
           stepId: createdSteps[i].id,
-          status: "completed"
+          status: "completed",
         });
-        
-        this.updateEmployeeOnboardingStatus(record.id, "completed", completedDate);
+
+        this.updateEmployeeOnboardingStatus(
+          record.id,
+          "completed",
+          completedDate,
+        );
       }
-      
+
       // Create time off balance for Vedanshu
       this.createTimeOffBalance({
         userId: vedanshu.id,
@@ -216,34 +264,47 @@ export class MemStorage implements IStorage {
         sickTotal: 15,
         sickUsed: 2,
         personalTotal: 10,
-        personalUsed: 3
+        personalUsed: 3,
       });
-      
+
       // Create default dashboard for Vedanshu
       this.createReportDashboard({
         userId: vedanshu.id,
         name: "HR Analytics Dashboard",
         layout: {
           charts: [
-            { type: "employeeEngagement", title: "Employee Engagement", timeframe: "quarterly" },
+            {
+              type: "employeeEngagement",
+              title: "Employee Engagement",
+              timeframe: "quarterly",
+            },
             { type: "attrition", title: "Attrition Rate", timeframe: "annual" },
-            { type: "recruitment", title: "Recruitment Metrics", timeframe: "monthly" }
-          ]
+            {
+              type: "recruitment",
+              title: "Recruitment Metrics",
+              timeframe: "monthly",
+            },
+          ],
         },
-        isDefault: true
+        isDefault: true,
       });
-      
+
       // Create document categories
       const categories: InsertDocumentCategory[] = [
         { name: "Salary Slips", description: "Monthly salary slips" },
-        { name: "Contracts", description: "Employment contracts and agreements" },
+        {
+          name: "Contracts",
+          description: "Employment contracts and agreements",
+        },
         { name: "Policies", description: "Company policies and guidelines" },
         { name: "Tax Documents", description: "Tax-related documents" },
         { name: "Benefits", description: "Benefits and insurance information" },
       ];
-      
-      const createdCategories = categories.map(category => this.createDocumentCategory(category));
-      
+
+      const createdCategories = categories.map((category) =>
+        this.createDocumentCategory(category),
+      );
+
       // Create sample verified documents for Vedanshu
       if (createdCategories.length > 0) {
         const documents: InsertDocument[] = [
@@ -256,7 +317,7 @@ export class MemStorage implements IStorage {
             uploadedBy: vedanshu.id,
             isPublic: false,
             isVerified: true,
-            metadata: {}
+            metadata: {},
           },
           {
             name: "PAN Card",
@@ -267,7 +328,7 @@ export class MemStorage implements IStorage {
             uploadedBy: vedanshu.id,
             isPublic: false,
             isVerified: true,
-            metadata: {}
+            metadata: {},
           },
           {
             name: "Aadhaar Card",
@@ -278,7 +339,7 @@ export class MemStorage implements IStorage {
             uploadedBy: vedanshu.id,
             isPublic: false,
             isVerified: true,
-            metadata: {}
+            metadata: {},
           },
           {
             name: "Health Insurance Policy",
@@ -289,7 +350,7 @@ export class MemStorage implements IStorage {
             uploadedBy: vedanshu.id,
             isPublic: false,
             isVerified: true,
-            metadata: {}
+            metadata: {},
           },
           {
             name: "April 2025 Salary Slip",
@@ -300,7 +361,7 @@ export class MemStorage implements IStorage {
             uploadedBy: vedanshu.id,
             isPublic: false,
             isVerified: true,
-            metadata: {}
+            metadata: {},
           },
           {
             name: "March 2025 Salary Slip",
@@ -311,14 +372,14 @@ export class MemStorage implements IStorage {
             uploadedBy: vedanshu.id,
             isPublic: false,
             isVerified: true,
-            metadata: {}
-          }
+            metadata: {},
+          },
         ];
-        
-        documents.forEach(doc => this.createDocument(doc));
+
+        documents.forEach((doc) => this.createDocument(doc));
       }
     }
-    
+
     // Create default employee user (Emily Smith from the design)
     const employeeUser: InsertUser = {
       username: "emily",
@@ -331,9 +392,9 @@ export class MemStorage implements IStorage {
       position: "Marketing Specialist",
       avatar: "",
     };
-    
+
     const emilyUser = this.createUser(employeeUser);
-    
+
     // Test user 1 - Fully onboarded
     const user1: InsertUser = {
       username: "user1",
@@ -345,7 +406,7 @@ export class MemStorage implements IStorage {
       department: "Marketing",
       position: "Marketing Manager",
       avatar: "",
-      
+
       // Personal details
       gender: "female",
       dateOfBirth: new Date("1992-08-12"),
@@ -354,18 +415,18 @@ export class MemStorage implements IStorage {
       emergencyContactName: "David Johnson",
       emergencyContactRelation: "Spouse",
       emergencyContactNumber: "+919876543211",
-      
+
       // Government IDs
       panNumber: "GXIPS1234F",
       aadhaarNumber: "8765-4321-0987",
-      
+
       // Financial details
       pfNumber: "PF12345678",
       uanNumber: "UAN23456789",
       bankAccountNumber: "9876543210",
       bankName: "ICICI Bank",
       ifscCode: "ICIC0001234",
-      
+
       // Address
       currentAddress: "45 Park Avenue, Indiranagar",
       permanentAddress: "45 Park Avenue, Indiranagar",
@@ -373,7 +434,7 @@ export class MemStorage implements IStorage {
       state: "Karnataka",
       country: "India",
       pincode: "560038",
-      
+
       // Employment details
       employeeId: "WUG0002",
       joiningDate: new Date("2021-03-10"),
@@ -381,7 +442,7 @@ export class MemStorage implements IStorage {
       employmentType: "full-time",
       workLocation: "remote",
     };
-    
+
     // Test user 2 - Partially onboarded
     const user2: InsertUser = {
       username: "user2",
@@ -393,12 +454,12 @@ export class MemStorage implements IStorage {
       department: "Product",
       position: "Product Designer",
       avatar: "",
-      
+
       // Partial personal details
       gender: "male",
       dateOfBirth: new Date("1988-11-24"),
       maritalStatus: "single",
-      
+
       // Minimal work details
       employeeId: "WUG0003",
       joiningDate: new Date("2023-01-05"),
@@ -406,7 +467,7 @@ export class MemStorage implements IStorage {
       employmentType: "full-time",
       workLocation: "hybrid",
     };
-    
+
     // Test user 3 - Brand new user
     const user3: InsertUser = {
       username: "user3",
@@ -418,98 +479,106 @@ export class MemStorage implements IStorage {
       department: "Sales",
       position: "Sales Representative",
       avatar: "",
-      
+
       // Minimal employment details
       employeeId: "WUG0004",
       joiningDate: new Date("2025-04-25"), // Just joined
     };
-    
+
     const sarah = this.createUser(user1);
     const michael = this.createUser(user2);
     const priya = this.createUser(user3);
-    
+
     // Configure onboarding status for test users
     if (createdSteps && createdSteps.length === 5) {
       // User 1 - Sarah - All steps completed (100%)
       for (let i = 0; i < 5; i++) {
         const completedDate = new Date();
         completedDate.setDate(completedDate.getDate() - (15 - i * 3));
-        
+
         const record = this.createEmployeeOnboardingRecord({
           userId: sarah.id,
           stepId: createdSteps[i].id,
-          status: "completed"
+          status: "completed",
         });
-        
-        this.updateEmployeeOnboardingStatus(record.id, "completed", completedDate);
+
+        this.updateEmployeeOnboardingStatus(
+          record.id,
+          "completed",
+          completedDate,
+        );
       }
-      
+
       // User 2 - Michael - Partially completed (60%)
       // First three steps completed
       for (let i = 0; i < 3; i++) {
         const completedDate = new Date();
         completedDate.setDate(completedDate.getDate() - (7 - i));
-        
+
         const record = this.createEmployeeOnboardingRecord({
           userId: michael.id,
           stepId: createdSteps[i].id,
-          status: "completed"
+          status: "completed",
         });
-        
-        this.updateEmployeeOnboardingStatus(record.id, "completed", completedDate);
+
+        this.updateEmployeeOnboardingStatus(
+          record.id,
+          "completed",
+          completedDate,
+        );
       }
-      
+
       // Steps 4 and 5 not started
       for (let i = 3; i < 5; i++) {
         this.createEmployeeOnboardingRecord({
           userId: michael.id,
           stepId: createdSteps[i].id,
-          status: "not_started"
+          status: "not_started",
         });
       }
-      
+
       // User 3 - Priya - Brand new (0%)
       // Create onboarding records but all are not_started
       for (let i = 0; i < 5; i++) {
         this.createEmployeeOnboardingRecord({
           userId: priya.id,
           stepId: createdSteps[i].id,
-          status: "not_started"
+          status: "not_started",
         });
       }
     }
-    
+
     // Create employee onboarding records for Emily
     if (emilyUser && createdSteps.length === 5) {
       // First three steps are completed
       for (let i = 0; i < 3; i++) {
         const completedDate = new Date();
         completedDate.setDate(completedDate.getDate() - (3 - i)); // Completed over the last 3 days
-        
+
         this.createEmployeeOnboardingRecord({
           userId: emilyUser.id,
           stepId: createdSteps[i].id,
-          status: "completed"
+          status: "completed",
         });
-        
+
         this.updateEmployeeOnboardingStatus(i + 1, "completed", completedDate);
       }
-      
+
       // Step 4 is in progress
       this.createEmployeeOnboardingRecord({
         userId: emilyUser.id,
         stepId: createdSteps[3].id,
-        status: "in_progress"
+        status: "in_progress",
       });
-      
+
       // Step 5 is not started
       this.createEmployeeOnboardingRecord({
         userId: emilyUser.id,
         stepId: createdSteps[4].id,
-        status: "not_started"
+        status: "not_started",
       });
     }
-    
+
     // Create document categories
     const categories: InsertDocumentCategory[] = [
       { name: "Salary Slips", description: "Monthly salary slips" },
@@ -518,15 +587,17 @@ export class MemStorage implements IStorage {
       { name: "Tax Documents", description: "Tax-related documents" },
       { name: "Benefits", description: "Benefits and insurance information" },
     ];
-    
-    const createdCategories = categories.map(category => this.createDocumentCategory(category));
-    
+
+    const createdCategories = categories.map((category) =>
+      this.createDocumentCategory(category),
+    );
+
     // Create some sample documents for Emily
     if (emilyUser && createdCategories.length > 0) {
       const now = new Date();
       const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 31);
       const twoMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 2, 15);
-      
+
       const documents: InsertDocument[] = [
         {
           name: "May 2023 Salary Slip",
@@ -536,7 +607,7 @@ export class MemStorage implements IStorage {
           categoryId: createdCategories[0].id,
           uploadedBy: 1, // Admin uploaded
           isPublic: false,
-          metadata: {}
+          metadata: {},
         },
         {
           name: "Employment Contract",
@@ -546,7 +617,7 @@ export class MemStorage implements IStorage {
           categoryId: createdCategories[1].id,
           uploadedBy: 1, // Admin uploaded
           isPublic: false,
-          metadata: {}
+          metadata: {},
         },
         {
           name: "Health Insurance Policy",
@@ -556,13 +627,13 @@ export class MemStorage implements IStorage {
           categoryId: createdCategories[4].id,
           uploadedBy: 1, // Admin uploaded
           isPublic: true,
-          metadata: {}
-        }
+          metadata: {},
+        },
       ];
-      
-      documents.forEach(doc => this.createDocument(doc));
+
+      documents.forEach((doc) => this.createDocument(doc));
     }
-    
+
     // Create events
     if (emilyUser) {
       const now = new Date();
@@ -574,7 +645,7 @@ export class MemStorage implements IStorage {
           endDate: new Date(now.getFullYear(), now.getMonth(), 15, 11, 30), // June 15, 11:30 AM
           location: "Conference Room A",
           category: "Marketing Department",
-          createdBy: 1 // Admin created
+          createdBy: 1, // Admin created
         },
         {
           title: "Quarterly Review",
@@ -583,7 +654,7 @@ export class MemStorage implements IStorage {
           endDate: new Date(now.getFullYear(), now.getMonth(), 18, 15, 30), // June 18, 3:30 PM
           location: "HR Office",
           category: "Performance Review",
-          createdBy: 1 // Admin created
+          createdBy: 1, // Admin created
         },
         {
           title: "Company Town Hall",
@@ -592,12 +663,12 @@ export class MemStorage implements IStorage {
           endDate: new Date(now.getFullYear(), now.getMonth(), 22, 10, 30), // June 22, 10:30 AM
           location: "Main Auditorium",
           category: "All Employees",
-          createdBy: 1 // Admin created
-        }
+          createdBy: 1, // Admin created
+        },
       ];
-      
-      events.forEach(event => this.createEvent(event));
-      
+
+      events.forEach((event) => this.createEvent(event));
+
       // Create time off balance for Emily
       this.createTimeOffBalance({
         userId: emilyUser.id,
@@ -606,20 +677,28 @@ export class MemStorage implements IStorage {
         sickTotal: 10,
         sickUsed: 4,
         personalTotal: 5,
-        personalUsed: 3
+        personalUsed: 3,
       });
-      
+
       // Create default dashboard
       this.createReportDashboard({
         userId: emilyUser.id,
         name: "Default Dashboard",
         layout: {
           charts: [
-            { type: "productivity", title: "Productivity Trends", timeframe: "monthly" },
-            { type: "projectCompletion", title: "Project Completion", timeframe: "quarterly" }
-          ]
+            {
+              type: "productivity",
+              title: "Productivity Trends",
+              timeframe: "monthly",
+            },
+            {
+              type: "projectCompletion",
+              title: "Project Completion",
+              timeframe: "quarterly",
+            },
+          ],
         },
-        isDefault: true
+        isDefault: true,
       });
     }
   }
@@ -628,7 +707,7 @@ export class MemStorage implements IStorage {
   async getUsers(): Promise<User[]> {
     return Array.from(this.users.values());
   }
-  
+
   async getUser(id: number): Promise<User | undefined> {
     return this.users.get(id);
   }
@@ -638,11 +717,9 @@ export class MemStorage implements IStorage {
       (user) => user.username === username,
     );
   }
-  
+
   async getUserByEmail(email: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.email === email,
-    );
+    return Array.from(this.users.values()).find((user) => user.email === email);
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
@@ -652,11 +729,14 @@ export class MemStorage implements IStorage {
     this.users.set(id, user);
     return user;
   }
-  
-  async updateUser(id: number, updates: Partial<User>): Promise<User | undefined> {
+
+  async updateUser(
+    id: number,
+    updates: Partial<User>,
+  ): Promise<User | undefined> {
     const user = this.users.get(id);
     if (!user) return undefined;
-    
+
     const updatedUser = { ...user, ...updates };
     this.users.set(id, updatedUser);
     return updatedUser;
@@ -664,15 +744,18 @@ export class MemStorage implements IStorage {
 
   // Onboarding steps operations
   async getOnboardingSteps(): Promise<OnboardingStep[]> {
-    return Array.from(this.onboardingSteps.values())
-      .sort((a, b) => a.order - b.order);
+    return Array.from(this.onboardingSteps.values()).sort(
+      (a, b) => a.order - b.order,
+    );
   }
-  
+
   async getOnboardingStep(id: number): Promise<OnboardingStep | undefined> {
     return this.onboardingSteps.get(id);
   }
-  
-  async createOnboardingStep(step: InsertOnboardingStep): Promise<OnboardingStep> {
+
+  async createOnboardingStep(
+    step: InsertOnboardingStep,
+  ): Promise<OnboardingStep> {
     const id = this.currentIds.onboardingSteps++;
     const newStep: OnboardingStep = { ...step, id };
     this.onboardingSteps.set(id, newStep);
@@ -680,37 +763,50 @@ export class MemStorage implements IStorage {
   }
 
   // Employee onboarding operations
-  async getEmployeeOnboardingByUserId(userId: number): Promise<(EmployeeOnboarding & { step: OnboardingStep })[]> {
-    const records = Array.from(this.employeeOnboarding.values())
-      .filter(record => record.userId === userId);
-    
-    return records.map(record => {
-      const step = this.onboardingSteps.get(record.stepId);
-      if (!step) throw new Error(`Onboarding step not found: ${record.stepId}`);
-      return { ...record, step };
-    }).sort((a, b) => a.step.order - b.step.order);
+  async getEmployeeOnboardingByUserId(
+    userId: number,
+  ): Promise<(EmployeeOnboarding & { step: OnboardingStep })[]> {
+    const records = Array.from(this.employeeOnboarding.values()).filter(
+      (record) => record.userId === userId,
+    );
+
+    return records
+      .map((record) => {
+        const step = this.onboardingSteps.get(record.stepId);
+        if (!step)
+          throw new Error(`Onboarding step not found: ${record.stepId}`);
+        return { ...record, step };
+      })
+      .sort((a, b) => a.step.order - b.step.order);
   }
-  
-  async updateEmployeeOnboardingStatus(id: number, status: string, completedAt?: Date): Promise<EmployeeOnboarding | undefined> {
+
+  async updateEmployeeOnboardingStatus(
+    id: number,
+    status: string,
+    completedAt?: Date,
+  ): Promise<EmployeeOnboarding | undefined> {
     const record = this.employeeOnboarding.get(id);
     if (!record) return undefined;
-    
+
     const updatedRecord: EmployeeOnboarding = {
       ...record,
       status,
-      completedAt: status === "completed" ? completedAt || new Date() : record.completedAt
+      completedAt:
+        status === "completed" ? completedAt || new Date() : record.completedAt,
     };
-    
+
     this.employeeOnboarding.set(id, updatedRecord);
     return updatedRecord;
   }
-  
-  async createEmployeeOnboardingRecord(record: InsertEmployeeOnboarding): Promise<EmployeeOnboarding> {
+
+  async createEmployeeOnboardingRecord(
+    record: InsertEmployeeOnboarding,
+  ): Promise<EmployeeOnboarding> {
     const id = this.currentIds.employeeOnboarding++;
     const newRecord: EmployeeOnboarding = {
       ...record,
       id,
-      completedAt: record.status === "completed" ? new Date() : undefined
+      completedAt: record.status === "completed" ? new Date() : undefined,
     };
     this.employeeOnboarding.set(id, newRecord);
     return newRecord;
@@ -720,12 +816,14 @@ export class MemStorage implements IStorage {
   async getDocumentCategories(): Promise<DocumentCategory[]> {
     return Array.from(this.documentCategories.values());
   }
-  
+
   async getDocumentCategory(id: number): Promise<DocumentCategory | undefined> {
     return this.documentCategories.get(id);
   }
-  
-  async createDocumentCategory(category: InsertDocumentCategory): Promise<DocumentCategory> {
+
+  async createDocumentCategory(
+    category: InsertDocumentCategory,
+  ): Promise<DocumentCategory> {
     const id = this.currentIds.documentCategories++;
     const newCategory: DocumentCategory = { ...category, id };
     this.documentCategories.set(id, newCategory);
@@ -734,26 +832,34 @@ export class MemStorage implements IStorage {
 
   // Documents operations
   async getDocuments(): Promise<Document[]> {
-    return Array.from(this.documents.values())
-      .sort((a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime());
+    return Array.from(this.documents.values()).sort(
+      (a, b) =>
+        new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime(),
+    );
   }
-  
+
   async getDocumentsByUserId(userId: number): Promise<Document[]> {
     return Array.from(this.documents.values())
-      .filter(doc => doc.uploadedBy === userId || doc.isPublic)
-      .sort((a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime());
+      .filter((doc) => doc.uploadedBy === userId || doc.isPublic)
+      .sort(
+        (a, b) =>
+          new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime(),
+      );
   }
-  
+
   async getDocumentsByCategory(categoryId: number): Promise<Document[]> {
     return Array.from(this.documents.values())
-      .filter(doc => doc.categoryId === categoryId)
-      .sort((a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime());
+      .filter((doc) => doc.categoryId === categoryId)
+      .sort(
+        (a, b) =>
+          new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime(),
+      );
   }
-  
+
   async getDocument(id: number): Promise<Document | undefined> {
     return this.documents.get(id);
   }
-  
+
   async createDocument(document: InsertDocument): Promise<Document> {
     const id = this.currentIds.documents++;
     const now = new Date();
@@ -761,27 +867,29 @@ export class MemStorage implements IStorage {
     this.documents.set(id, newDocument);
     return newDocument;
   }
-  
+
   async deleteDocument(id: number): Promise<boolean> {
     return this.documents.delete(id);
   }
 
   // Events operations
   async getEvents(): Promise<Event[]> {
-    return Array.from(this.events.values())
-      .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime());
+    return Array.from(this.events.values()).sort(
+      (a, b) =>
+        new Date(a.startDate).getTime() - new Date(b.startDate).getTime(),
+    );
   }
-  
+
   async getEventsByUserId(userId: number): Promise<Event[]> {
     // In a real app, we'd have a many-to-many relationship for event participants
     // For simplicity, we'll return all events for now
     return this.getEvents();
   }
-  
+
   async getEvent(id: number): Promise<Event | undefined> {
     return this.events.get(id);
   }
-  
+
   async createEvent(event: InsertEvent): Promise<Event> {
     const id = this.currentIds.events++;
     const newEvent: Event = { ...event, id };
@@ -790,63 +898,397 @@ export class MemStorage implements IStorage {
   }
 
   // Time off balance operations
-  async getTimeOffBalanceByUserId(userId: number): Promise<TimeOffBalance | undefined> {
-    return Array.from(this.timeOffBalances.values())
-      .find(balance => balance.userId === userId);
+  async getTimeOffBalanceByUserId(
+    userId: number,
+  ): Promise<TimeOffBalance | undefined> {
+    return Array.from(this.timeOffBalances.values()).find(
+      (balance) => balance.userId === userId,
+    );
   }
-  
-  async createTimeOffBalance(timeOff: InsertTimeOffBalance): Promise<TimeOffBalance> {
+
+  async createTimeOffBalance(
+    timeOff: InsertTimeOffBalance,
+  ): Promise<TimeOffBalance> {
     const id = this.currentIds.timeOffBalances++;
     const newTimeOff: TimeOffBalance = { ...timeOff, id };
     this.timeOffBalances.set(id, newTimeOff);
     return newTimeOff;
   }
-  
-  async updateTimeOffBalance(userId: number, updates: Partial<TimeOffBalance>): Promise<TimeOffBalance | undefined> {
-    const timeOff = Array.from(this.timeOffBalances.values())
-      .find(balance => balance.userId === userId);
-    
+
+  async updateTimeOffBalance(
+    userId: number,
+    updates: Partial<TimeOffBalance>,
+  ): Promise<TimeOffBalance | undefined> {
+    const timeOff = Array.from(this.timeOffBalances.values()).find(
+      (balance) => balance.userId === userId,
+    );
+
     if (!timeOff) return undefined;
-    
+
     const updatedTimeOff: TimeOffBalance = { ...timeOff, ...updates };
     this.timeOffBalances.set(timeOff.id, updatedTimeOff);
     return updatedTimeOff;
   }
 
   // Report dashboard operations
-  async getReportDashboardsByUserId(userId: number): Promise<ReportDashboard[]> {
-    return Array.from(this.reportDashboards.values())
-      .filter(dashboard => dashboard.userId === userId);
+  async getReportDashboardsByUserId(
+    userId: number,
+  ): Promise<ReportDashboard[]> {
+    return Array.from(this.reportDashboards.values()).filter(
+      (dashboard) => dashboard.userId === userId,
+    );
   }
-  
+
   async getReportDashboard(id: number): Promise<ReportDashboard | undefined> {
     return this.reportDashboards.get(id);
   }
-  
-  async getDefaultReportDashboardForUser(userId: number): Promise<ReportDashboard | undefined> {
-    return Array.from(this.reportDashboards.values())
-      .find(dashboard => dashboard.userId === userId && dashboard.isDefault);
+
+  async getDefaultReportDashboardForUser(
+    userId: number,
+  ): Promise<ReportDashboard | undefined> {
+    return Array.from(this.reportDashboards.values()).find(
+      (dashboard) => dashboard.userId === userId && dashboard.isDefault,
+    );
   }
-  
-  async createReportDashboard(dashboard: InsertReportDashboard): Promise<ReportDashboard> {
+
+  async createReportDashboard(
+    dashboard: InsertReportDashboard,
+  ): Promise<ReportDashboard> {
     const id = this.currentIds.reportDashboards++;
     const newDashboard: ReportDashboard = { ...dashboard, id };
     this.reportDashboards.set(id, newDashboard);
     return newDashboard;
   }
-  
-  async updateReportDashboard(id: number, updates: Partial<ReportDashboard>): Promise<ReportDashboard | undefined> {
+
+  async updateReportDashboard(
+    id: number,
+    updates: Partial<ReportDashboard>,
+  ): Promise<ReportDashboard | undefined> {
     const dashboard = this.reportDashboards.get(id);
     if (!dashboard) return undefined;
-    
+
     const updatedDashboard: ReportDashboard = { ...dashboard, ...updates };
     this.reportDashboards.set(id, updatedDashboard);
     return updatedDashboard;
   }
-  
+
   async deleteReportDashboard(id: number): Promise<boolean> {
     return this.reportDashboards.delete(id);
   }
 }
 
-export const storage = new MemStorage();
+export class DatabaseStorage implements IStorage {
+  // User operations
+  async getUsers(): Promise<User[]> {
+    return await db.select().from(users);
+  }
+
+  async getUser(id: number): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user || undefined;
+  }
+
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user || undefined;
+  }
+
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.email, email));
+    return user || undefined;
+  }
+
+  async createUser(insertUser: InsertUser): Promise<User> {
+    const now = new Date();
+    const [user] = await db
+      .insert(users)
+      .values({ ...insertUser, lastLogin: now })
+      .returning();
+    return user;
+  }
+
+  async updateUser(id: number, updates: Partial<User>): Promise<User | undefined> {
+    const [updatedUser] = await db
+      .update(users)
+      .set(updates)
+      .where(eq(users.id, id))
+      .returning();
+    return updatedUser || undefined;
+  }
+
+  // Onboarding steps operations
+  async getOnboardingSteps(): Promise<OnboardingStep[]> {
+    return await db.select().from(onboardingSteps).orderBy(onboardingSteps.order);
+  }
+
+  async getOnboardingStep(id: number): Promise<OnboardingStep | undefined> {
+    const [step] = await db.select().from(onboardingSteps).where(eq(onboardingSteps.id, id));
+    return step || undefined;
+  }
+
+  async createOnboardingStep(step: InsertOnboardingStep): Promise<OnboardingStep> {
+    const [newStep] = await db.insert(onboardingSteps).values(step).returning();
+    return newStep;
+  }
+
+  // Employee onboarding operations
+  async getEmployeeOnboardingByUserId(
+    userId: number
+  ): Promise<(EmployeeOnboarding & { step: OnboardingStep })[]> {
+    const onboardingRecords = await db
+      .select({
+        id: employeeOnboarding.id,
+        userId: employeeOnboarding.userId,
+        stepId: employeeOnboarding.stepId,
+        status: employeeOnboarding.status,
+        completedAt: employeeOnboarding.completedAt,
+        step: onboardingSteps
+      })
+      .from(employeeOnboarding)
+      .innerJoin(
+        onboardingSteps,
+        eq(employeeOnboarding.stepId, onboardingSteps.id)
+      )
+      .where(eq(employeeOnboarding.userId, userId))
+      .orderBy(onboardingSteps.order);
+    
+    return onboardingRecords as (EmployeeOnboarding & { step: OnboardingStep })[];
+  }
+
+  async updateEmployeeOnboardingStatus(
+    id: number,
+    status: string,
+    completedAt?: Date
+  ): Promise<EmployeeOnboarding | undefined> {
+    const updates: Partial<EmployeeOnboarding> = { status };
+    if (status === "completed" && !completedAt) {
+      updates.completedAt = new Date();
+    } else if (completedAt) {
+      updates.completedAt = completedAt;
+    }
+
+    const [updated] = await db
+      .update(employeeOnboarding)
+      .set(updates)
+      .where(eq(employeeOnboarding.id, id))
+      .returning();
+    
+    return updated || undefined;
+  }
+
+  async createEmployeeOnboardingRecord(
+    record: InsertEmployeeOnboarding
+  ): Promise<EmployeeOnboarding> {
+    const [newRecord] = await db
+      .insert(employeeOnboarding)
+      .values(record)
+      .returning();
+    
+    return newRecord;
+  }
+
+  // Document categories operations
+  async getDocumentCategories(): Promise<DocumentCategory[]> {
+    return await db.select().from(documentCategories);
+  }
+
+  async getDocumentCategory(id: number): Promise<DocumentCategory | undefined> {
+    const [category] = await db
+      .select()
+      .from(documentCategories)
+      .where(eq(documentCategories.id, id));
+    
+    return category || undefined;
+  }
+
+  async createDocumentCategory(
+    category: InsertDocumentCategory
+  ): Promise<DocumentCategory> {
+    const [newCategory] = await db
+      .insert(documentCategories)
+      .values(category)
+      .returning();
+    
+    return newCategory;
+  }
+
+  // Documents operations
+  async getDocuments(): Promise<Document[]> {
+    return await db.select().from(documents).orderBy(desc(documents.uploadedAt));
+  }
+
+  async getDocumentsByUserId(userId: number): Promise<Document[]> {
+    return await db
+      .select()
+      .from(documents)
+      .where(eq(documents.uploadedBy, userId))
+      .orderBy(desc(documents.uploadedAt));
+  }
+
+  async getDocumentsByCategory(categoryId: number): Promise<Document[]> {
+    return await db
+      .select()
+      .from(documents)
+      .where(eq(documents.categoryId, categoryId))
+      .orderBy(desc(documents.uploadedAt));
+  }
+
+  async getDocument(id: number): Promise<Document | undefined> {
+    const [document] = await db
+      .select()
+      .from(documents)
+      .where(eq(documents.id, id));
+    
+    return document || undefined;
+  }
+
+  async createDocument(document: InsertDocument): Promise<Document> {
+    const [newDocument] = await db
+      .insert(documents)
+      .values({ ...document, uploadedAt: new Date() })
+      .returning();
+    
+    return newDocument;
+  }
+
+  async deleteDocument(id: number): Promise<boolean> {
+    const result = await db
+      .delete(documents)
+      .where(eq(documents.id, id))
+      .returning({ id: documents.id });
+    
+    return result.length > 0;
+  }
+
+  // Events operations
+  async getEvents(): Promise<Event[]> {
+    return await db.select().from(events).orderBy(events.startDate);
+  }
+
+  async getEventsByUserId(userId: number): Promise<Event[]> {
+    return await db
+      .select()
+      .from(events)
+      .where(eq(events.createdBy, userId))
+      .orderBy(events.startDate);
+  }
+
+  async getEvent(id: number): Promise<Event | undefined> {
+    const [event] = await db
+      .select()
+      .from(events)
+      .where(eq(events.id, id));
+    
+    return event || undefined;
+  }
+
+  async createEvent(event: InsertEvent): Promise<Event> {
+    const [newEvent] = await db
+      .insert(events)
+      .values(event)
+      .returning();
+    
+    return newEvent;
+  }
+
+  // Time off balance operations
+  async getTimeOffBalanceByUserId(
+    userId: number
+  ): Promise<TimeOffBalance | undefined> {
+    const [timeOff] = await db
+      .select()
+      .from(timeOffBalances)
+      .where(eq(timeOffBalances.userId, userId));
+    
+    return timeOff || undefined;
+  }
+
+  async createTimeOffBalance(timeOff: InsertTimeOffBalance): Promise<TimeOffBalance> {
+    const [newTimeOff] = await db
+      .insert(timeOffBalances)
+      .values(timeOff)
+      .returning();
+    
+    return newTimeOff;
+  }
+
+  async updateTimeOffBalance(
+    userId: number,
+    updates: Partial<TimeOffBalance>
+  ): Promise<TimeOffBalance | undefined> {
+    const [updatedTimeOff] = await db
+      .update(timeOffBalances)
+      .set(updates)
+      .where(eq(timeOffBalances.userId, userId))
+      .returning();
+    
+    return updatedTimeOff || undefined;
+  }
+
+  // Report dashboard operations
+  async getReportDashboardsByUserId(userId: number): Promise<ReportDashboard[]> {
+    return await db
+      .select()
+      .from(reportDashboards)
+      .where(eq(reportDashboards.userId, userId));
+  }
+
+  async getReportDashboard(id: number): Promise<ReportDashboard | undefined> {
+    const [dashboard] = await db
+      .select()
+      .from(reportDashboards)
+      .where(eq(reportDashboards.id, id));
+    
+    return dashboard || undefined;
+  }
+
+  async getDefaultReportDashboardForUser(
+    userId: number
+  ): Promise<ReportDashboard | undefined> {
+    const [dashboard] = await db
+      .select()
+      .from(reportDashboards)
+      .where(and(
+        eq(reportDashboards.userId, userId),
+        eq(reportDashboards.isDefault, true)
+      ));
+    
+    return dashboard || undefined;
+  }
+
+  async createReportDashboard(
+    dashboard: InsertReportDashboard
+  ): Promise<ReportDashboard> {
+    const [newDashboard] = await db
+      .insert(reportDashboards)
+      .values(dashboard)
+      .returning();
+    
+    return newDashboard;
+  }
+
+  async updateReportDashboard(
+    id: number,
+    updates: Partial<ReportDashboard>
+  ): Promise<ReportDashboard | undefined> {
+    const [updatedDashboard] = await db
+      .update(reportDashboards)
+      .set(updates)
+      .where(eq(reportDashboards.id, id))
+      .returning();
+    
+    return updatedDashboard || undefined;
+  }
+
+  async deleteReportDashboard(id: number): Promise<boolean> {
+    const result = await db
+      .delete(reportDashboards)
+      .where(eq(reportDashboards.id, id))
+      .returning({ id: reportDashboards.id });
+    
+    return result.length > 0;
+  }
+}
+
+// Change from MemStorage to DatabaseStorage
+export const storage = new DatabaseStorage();
